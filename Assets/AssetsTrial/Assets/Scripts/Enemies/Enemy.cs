@@ -93,9 +93,14 @@ public class Enemy : MonoBehaviour
 
     void Die()
     {
-        if (RunManager.Instance != null && data != null)
+        if (RunManager.Instance != null)
         {
-            RunManager.Instance.AddHeroXP(data.xpReward);
+            if (data != null)
+            {
+                RunManager.Instance.AddHeroXP(data.xpReward);
+            }
+
+            RunManager.Instance.OnEnemyKilled(this);
         }
 
         Destroy(gameObject);

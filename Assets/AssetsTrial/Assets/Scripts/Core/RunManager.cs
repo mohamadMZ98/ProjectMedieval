@@ -13,6 +13,7 @@ public class RunManager : MonoBehaviour
     private float runTime = 0f;
     private bool isRunning = false;
     private int currentGold = 0;
+    private int enemiesKilled = 0;
 
     public bool IsRunning => isRunning;
     public float RunTime => runTime;
@@ -27,6 +28,9 @@ public class RunManager : MonoBehaviour
 
     public Transform HeroTransform => hero != null ? hero.transform : null;
     public PlayerController Hero => hero;
+
+    public int EnemiesKilled => enemiesKilled;
+    public int CurrentEnemyCount => Enemy.ActiveEnemies.Count;
 
     void Awake()
     {
@@ -60,6 +64,7 @@ public class RunManager : MonoBehaviour
     public void StartRun()
     {
         runTime = 0f;
+        enemiesKilled = 0;
         isRunning = true;
 
         if (armyManager != null && hero != null)
@@ -72,7 +77,11 @@ public class RunManager : MonoBehaviour
             hero.EnableControl(true);
         }
 
-        Debug.Log("Run started.");
+        Debug.Log(
+            $"Run started. " +
+            $", ActiveEnemies = {Enemy.ActiveEnemies.Count} "
+            );
+    
     }
 
     public void EndRun(bool victory)
@@ -87,7 +96,12 @@ public class RunManager : MonoBehaviour
             hero.EnableControl(false);
         }
 
-        Debug.Log($"Run ended. Victory = {victory}. RunTime = {runTime} seconds. Gold = {currentGold}");
+        Debug.Log(
+            $"Run ended. Victory = {victory}. " +
+            $"RunTime = {runTime:F1} sec. " +
+            $"Gold = {currentGold}. " +
+            $"EnemiesKilled = {enemiesKilled}"
+        );
 
         // TODO: transition back to town scene and pass rewards.
     }
@@ -108,5 +122,11 @@ public class RunManager : MonoBehaviour
     public void AddGold(int amount)
     {
         currentGold += amount;
+    }
+
+    public void OnEnemyKilled(Enemy enemy)
+    {
+        enemiesKilled++;
+        Debug.Log($"Enemy killed. TotalKilled = {enemiesKilled}, Active = {Enemy.ActiveEnemies.Count}");
     }
 }
