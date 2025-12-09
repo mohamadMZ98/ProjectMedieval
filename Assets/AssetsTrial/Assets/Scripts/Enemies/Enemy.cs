@@ -24,6 +24,22 @@ public class Enemy : MonoBehaviour
         }
     }
 
+    public static void DestroyAllActiveEnemies()
+{
+    // Destroy all currently alive enemies and clear the list
+    for (int i = ActiveEnemies.Count - 1; i >= 0; i--)
+    {
+        Enemy e = ActiveEnemies[i];
+        if (e != null)
+        {
+            Object.Destroy(e.gameObject);
+        }
+    }
+
+    ActiveEnemies.Clear();
+}
+
+
     void OnDisable()
     {
         ActiveEnemies.Remove(this);
@@ -59,7 +75,14 @@ public class Enemy : MonoBehaviour
         if (hero == null) return;
 
         Vector3 direction = (hero.position - transform.position).normalized;
-        transform.position += direction * moveSpeed * Time.deltaTime;
+        Vector3 newPos = transform.position + direction * moveSpeed * Time.deltaTime;
+
+        if (MapBounds.Instance != null)
+        {
+            newPos = MapBounds.Instance.ClampPosition(newPos);
+        }
+
+        transform.position = newPos;
     }
 
     void HandleAttack()
@@ -93,9 +116,17 @@ public class Enemy : MonoBehaviour
 
     void Die()
     {
-        if (RunManager.Instance != null && data != null)
+        // Make sure this enemy is considered removed BEFORE logging
+        ActiveEnemies.Remove(this);
+
+        if (RunManager.Instance != null)
         {
-            RunManager.Instance.AddHeroXP(data.xpReward);
+            if (data != null)
+            {
+                RunManager.Instance.AddHeroXP(data.xpReward);
+            }
+
+            RunManager.Instance.OnEnemyKilled(this);
         }
 
         Destroy(gameObject);

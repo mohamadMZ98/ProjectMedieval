@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Collider2D))]
@@ -8,11 +9,25 @@ public class ArmyUnit : MonoBehaviour
     private float currentHP;
     private float attackTimer = 0f;
 
-    // How tightly they hold their own spot
-    [SerializeField] private float followDistance = 0.1f;
+    [Header("Movement")]
+    [SerializeField] private float desiredRadius = 1.5f;      // preferred distance from hero
+    [SerializeField] private float separationRadius = 0.7f;   // start pushing away when closer than this
+    [SerializeField] private float separationStrength = 1.5f; // how strongly they separate
 
-    // Unique offset around the hero so they do not stack
-    private Vector2 formationOffset;
+    private static readonly List<ArmyUnit> ActiveUnits = new List<ArmyUnit>();
+
+    private void OnEnable()
+    {
+        if (!ActiveUnits.Contains(this))
+        {
+            ActiveUnits.Add(this);
+        }
+    }
+
+    private void OnDisable()
+    {
+        ActiveUnits.Remove(this);
+    }
 
     private void Start()
     {
@@ -27,11 +42,9 @@ public class ArmyUnit : MonoBehaviour
         }
     }
 
-    public void Initialize(UnitData unitData, Vector2 offset)
+    public void Initialize(UnitData unitData)
     {
         data = unitData;
-        formationOffset = offset;
-
         if (data != null)
         {
             currentHP = data.maxHP;
@@ -47,24 +60,54 @@ public class ArmyUnit : MonoBehaviour
         if (hero == null)
             return;
 
-        FollowHero(hero);
+        FollowHeroWithSeparation(hero);
         HandleAutoAttack();
     }
 
-    private void FollowHero(Transform hero)
+    private void FollowHeroWithSeparation(Transform hero)
     {
         if (data == null)
             return;
 
-        // Each unit has its own “slot” around the hero
-        Vector3 targetPos = hero.position + new Vector3(formationOffset.x, formationOffset.y, 0f);
-        Vector3 dir = targetPos - transform.position;
-        float distance = dir.magnitude;
+        Vector3 moveDir = Vector3.zero;
 
-        if (distance > followDistance)
+        // 1) Move toward hero until desired radius
+        Vector3 toHero = hero.position - transform.position;
+        float distToHero = toHero.magnitude;
+
+        if (distToHero > desiredRadius)
         {
-            dir.Normalize();
-            transform.position += dir * data.moveSpeed * Time.deltaTime;
+            moveDir += toHero.normalized;
+        }
+
+        // 2) Separation: push away from nearby units
+        for (int i = 0; i < ActiveUnits.Count; i++)
+        {
+            ArmyUnit other = ActiveUnits[i];
+            if (other == null || other == this) continue;
+
+            Vector3 diff = transform.position - other.transform.position;
+            float dist = diff.magnitude;
+
+            if (dist > 0f && dist < separationRadius)
+            {
+                float strength = (separationRadius - dist) / separationRadius;
+                moveDir += diff.normalized * strength * separationStrength;
+            }
+        }
+
+        if (moveDir.sqrMagnitude > 0.0001f)
+        {
+            moveDir.Normalize();
+
+            Vector3 newPos = transform.position + moveDir * data.moveSpeed * Time.deltaTime;
+
+            if (MapBounds.Instance != null)
+            {
+                newPos = MapBounds.Instance.ClampPosition(newPos);
+            }
+
+            transform.position = newPos;
         }
     }
 
