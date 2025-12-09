@@ -99,7 +99,15 @@ public class ArmyUnit : MonoBehaviour
         if (moveDir.sqrMagnitude > 0.0001f)
         {
             moveDir.Normalize();
-            transform.position += moveDir * data.moveSpeed * Time.deltaTime;
+
+            Vector3 newPos = transform.position + moveDir * data.moveSpeed * Time.deltaTime;
+
+            if (MapBounds.Instance != null)
+            {
+                newPos = MapBounds.Instance.ClampPosition(newPos);
+            }
+
+            transform.position = newPos;
         }
     }
 

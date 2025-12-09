@@ -61,28 +61,28 @@ public class RunManager : MonoBehaviour
         }
     }
 
-    public void StartRun()
+public void StartRun()
+{
+    // Make sure no leftover enemies from editor / previous runs
+    Enemy.DestroyAllActiveEnemies();
+
+    runTime = 0f;
+    enemiesKilled = 0;
+    isRunning = true;
+
+    if (armyManager != null && hero != null)
     {
-        runTime = 0f;
-        enemiesKilled = 0;
-        isRunning = true;
-
-        if (armyManager != null && hero != null)
-        {
-            armyManager.InitializeArmy(hero);
-        }
-
-        if (hero != null)
-        {
-            hero.EnableControl(true);
-        }
-
-        Debug.Log(
-            $"Run started. " +
-            $", ActiveEnemies = {Enemy.ActiveEnemies.Count} "
-            );
-    
+        armyManager.InitializeArmy(hero);
     }
+
+    if (hero != null)
+    {
+        hero.EnableControl(true);
+    }
+
+    Debug.Log($"Run started. ActiveEnemies = {Enemy.ActiveEnemies.Count}");
+}
+
 
     public void EndRun(bool victory)
     {

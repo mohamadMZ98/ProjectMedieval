@@ -35,7 +35,15 @@ public class PlayerController : MonoBehaviour
         Vector3 dir = new Vector3(h, v, 0f).normalized;
 
         float speed = heroStats.moveSpeed * movementSpeedMultiplier;
-        transform.position += dir * speed * Time.deltaTime;
+        Vector3 newPos = transform.position + dir * speed * Time.deltaTime;
+
+        // Clamp to map bounds if present
+        if (MapBounds.Instance != null)
+        {
+            newPos = MapBounds.Instance.ClampPosition(newPos);
+        }
+
+        transform.position = newPos;
     }
 
     void HandleAutoAttack()
