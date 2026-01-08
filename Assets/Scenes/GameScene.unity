@@ -317,7 +317,7 @@ Transform:
   m_GameObject: {fileID: 414493447}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.25172007, y: -0.08485997, z: 0}
+  m_LocalPosition: {x: 2.77, y: -0.08485997, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -993,18 +993,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 514721462}
     m_Modifications:
-    - target: {fileID: 943834242811256219, guid: 820b780a8bcdc4676a10689248721832, type: 3}
-      propertyPath: m_Color.b
-      value: 0.67058825
-      objectReference: {fileID: 0}
-    - target: {fileID: 943834242811256219, guid: 820b780a8bcdc4676a10689248721832, type: 3}
-      propertyPath: m_Color.g
-      value: 0.22497109
-      objectReference: {fileID: 0}
-    - target: {fileID: 943834242811256219, guid: 820b780a8bcdc4676a10689248721832, type: 3}
-      propertyPath: m_Color.r
-      value: 0.15294115
-      objectReference: {fileID: 0}
     - target: {fileID: 1080540839565621028, guid: 820b780a8bcdc4676a10689248721832, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.24
@@ -1045,17 +1033,9 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3826713387627304240, guid: 820b780a8bcdc4676a10689248721832, type: 3}
-      propertyPath: data
-      value: 
-      objectReference: {fileID: 11400000, guid: 80aedf5d0f27b49948d5015810e38aed, type: 2}
     - target: {fileID: 8704293785049847854, guid: 820b780a8bcdc4676a10689248721832, type: 3}
       propertyPath: m_Name
       value: ArmyUnit
-      objectReference: {fileID: 0}
-    - target: {fileID: 8704293785049847854, guid: 820b780a8bcdc4676a10689248721832, type: 3}
-      propertyPath: m_Layer
-      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -14,6 +14,14 @@ public class ArmyUnit : MonoBehaviour
     [SerializeField] private float separationRadius = 0.7f;   // start pushing away when closer than this
     [SerializeField] private float separationStrength = 1.5f; // how strongly they separate
 
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
+    [SerializeField] private string isMoving = "isMoving";
+    [SerializeField] private string moveX = "moveX";
+    [SerializeField] private string moveY = "moveY";
+
+    private Vector2 lastFacing = Vector2.down;
+
     private static readonly List<ArmyUnit> ActiveUnits = new List<ArmyUnit>();
 
     private void OnEnable()
@@ -27,6 +35,16 @@ public class ArmyUnit : MonoBehaviour
     private void OnDisable()
     {
         ActiveUnits.Remove(this);
+    }
+
+    private void Awake()
+    {
+        var anims = GetComponentsInChildren<Animator>(true);
+        Debug.Log($"[{name}] Animators found in children = {anims.Length}", this);
+
+        for (int i = 0; i < anims.Length; i++)
+            Debug.Log($"[{name}] Animator[{i}] on '{anims[i].gameObject.name}' controller='" +
+                $"{anims[i].runtimeAnimatorController}'", this);
     }
 
     private void Start()
@@ -60,14 +78,14 @@ public class ArmyUnit : MonoBehaviour
         if (hero == null)
             return;
 
-        FollowHeroWithSeparation(hero);
+        bool unitIsMoving = FollowHeroWithSeparation(hero);
         HandleAutoAttack();
     }
 
-    private void FollowHeroWithSeparation(Transform hero)
+    private bool FollowHeroWithSeparation(Transform hero)
     {
         if (data == null)
-            return;
+            return false;
 
         Vector3 moveDir = Vector3.zero;
 
@@ -96,6 +114,8 @@ public class ArmyUnit : MonoBehaviour
             }
         }
 
+        bool moved = false;
+
         if (moveDir.sqrMagnitude > 0.0001f)
         {
             moveDir.Normalize();
@@ -108,7 +128,49 @@ public class ArmyUnit : MonoBehaviour
             }
 
             transform.position = newPos;
+            moved = true;
+
+            UpdateAnimatorDirection(moveDir);
+
+            UpdateAnimatorMoving(moved);
+
         }
+            return moved;
+    }
+
+    private void UpdateAnimatorMoving(bool moving)
+    {
+        if (animator == null) return;
+        animator.SetBool(isMoving, moving);
+
+        // Keep lastFacing when idle — do NOT overwrite moveX/moveY when not moving
+        if (!moving)
+        {
+            animator.SetFloat(moveX, lastFacing.x);
+            animator.SetFloat(moveY, lastFacing.y);
+        }
+    }
+
+    private void UpdateAnimatorDirection(Vector3 moveDir)
+    {
+        if (animator == null) return;
+
+        Vector2 dir = new Vector2(moveDir.x, moveDir.y);
+
+        // force into Up/Down/Left/Right
+        if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
+        {
+            dir = new Vector2(Mathf.Sign(dir.x), 0f);
+        }
+        else
+        {
+            dir = new Vector2(0f, Mathf.Sign(dir.y));
+        }
+
+        lastFacing = dir;
+
+        animator.SetFloat(moveX, dir.x);
+        animator.SetFloat(moveY, dir.y);
     }
 
     private void HandleAutoAttack()
