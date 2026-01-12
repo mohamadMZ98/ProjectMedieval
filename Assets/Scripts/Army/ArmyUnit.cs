@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 [RequireComponent(typeof(Collider2D))]
@@ -14,6 +15,12 @@ public class ArmyUnit : MonoBehaviour
     [SerializeField] private float separationRadius = 0.7f;   // start pushing away when closer than this
     [SerializeField] private float separationStrength = 1.5f; // how strongly they separate
 
+    [Header("Idle")]
+    [SerializeField] private float stopDistance = 1.6f;
+    [SerializeField] private float idleDistance = 1.8f;
+    [SerializeField] private float minMoveDelta = 0.00004f;
+    [SerializeField] private float separationIdleScale = 0.25f;
+
     [Header("Animation")]
     [SerializeField] private Animator animator;
     [SerializeField] private string isMoving = "isMoving";
@@ -21,6 +28,7 @@ public class ArmyUnit : MonoBehaviour
     [SerializeField] private string moveY = "moveY";
 
     private Vector2 lastFacing = Vector2.down;
+    private Vector3 lastPos;
 
     private static readonly List<ArmyUnit> ActiveUnits = new List<ArmyUnit>();
 
@@ -49,6 +57,8 @@ public class ArmyUnit : MonoBehaviour
 
     private void Start()
     {
+        lastPos = transform.position;
+
         if (data != null)
         {
             currentHP = data.maxHP;
@@ -93,12 +103,13 @@ public class ArmyUnit : MonoBehaviour
         Vector3 toHero = hero.position - transform.position;
         float distToHero = toHero.magnitude;
 
-        if (distToHero > desiredRadius)
+        if (distToHero > stopDistance)
         {
             moveDir += toHero.normalized;
         }
 
         // 2) Separation: push away from nearby units
+        float sepMultiplier = (distToHero <= idleDistance) ? separationIdleScale : 1f;
         for (int i = 0; i < ActiveUnits.Count; i++)
         {
             ArmyUnit other = ActiveUnits[i];
@@ -114,8 +125,6 @@ public class ArmyUnit : MonoBehaviour
             }
         }
 
-        bool moved = false;
-
         if (moveDir.sqrMagnitude > 0.0001f)
         {
             moveDir.Normalize();
@@ -128,14 +137,27 @@ public class ArmyUnit : MonoBehaviour
             }
 
             transform.position = newPos;
-            moved = true;
-
-            UpdateAnimatorDirection(moveDir);
-
-            UpdateAnimatorMoving(moved);
+           
 
         }
-            return moved;
+
+        Vector3 delta = transform.position - lastPos;
+        lastPos = transform.position;
+
+        bool moved = delta.sqrMagnitude > minMoveDelta;
+
+        if(distToHero <= idleDistance && !moved)
+        {
+            UpdateAnimatorMoving(false);
+            return false;
+        }
+
+        if (moved)
+            UpdateAnimatorDirection(delta);
+
+        UpdateAnimatorMoving(moved);
+        return moved;
+            
     }
 
     private void UpdateAnimatorMoving(bool moving)
