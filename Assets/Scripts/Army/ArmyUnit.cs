@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 [RequireComponent(typeof(Collider2D))]
@@ -13,6 +14,21 @@ public class ArmyUnit : MonoBehaviour
     [SerializeField] private float desiredRadius = 1.5f;      // preferred distance from hero
     [SerializeField] private float separationRadius = 0.7f;   // start pushing away when closer than this
     [SerializeField] private float separationStrength = 1.5f; // how strongly they separate
+
+    [Header("Idle")]
+    [SerializeField] private float stopDistance = 1.6f;
+    [SerializeField] private float idleDistance = 1.8f;
+    [SerializeField] private float minMoveDelta = 0.00004f;
+    [SerializeField] private float separationIdleScale = 0.25f;
+
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
+    [SerializeField] private string isMoving = "isMoving";
+    [SerializeField] private string moveX = "moveX";
+    [SerializeField] private string moveY = "moveY";
+
+    private Vector2 lastFacing = Vector2.down;
+    private Vector3 lastPos;
 
     private static readonly List<ArmyUnit> ActiveUnits = new List<ArmyUnit>();
 
@@ -29,8 +45,20 @@ public class ArmyUnit : MonoBehaviour
         ActiveUnits.Remove(this);
     }
 
+    private void Awake()
+    {
+        var anims = GetComponentsInChildren<Animator>(true);
+        Debug.Log($"[{name}] Animators found in children = {anims.Length}", this);
+
+        for (int i = 0; i < anims.Length; i++)
+            Debug.Log($"[{name}] Animator[{i}] on '{anims[i].gameObject.name}' controller='" +
+                $"{anims[i].runtimeAnimatorController}'", this);
+    }
+
     private void Start()
     {
+        lastPos = transform.position;
+
         if (data != null)
         {
             currentHP = data.maxHP;
@@ -60,14 +88,14 @@ public class ArmyUnit : MonoBehaviour
         if (hero == null)
             return;
 
-        FollowHeroWithSeparation(hero);
+        bool unitIsMoving = FollowHeroWithSeparation(hero);
         HandleAutoAttack();
     }
 
-    private void FollowHeroWithSeparation(Transform hero)
+    private bool FollowHeroWithSeparation(Transform hero)
     {
         if (data == null)
-            return;
+            return false;
 
         Vector3 moveDir = Vector3.zero;
 
@@ -75,12 +103,13 @@ public class ArmyUnit : MonoBehaviour
         Vector3 toHero = hero.position - transform.position;
         float distToHero = toHero.magnitude;
 
-        if (distToHero > desiredRadius)
+        if (distToHero > stopDistance)
         {
             moveDir += toHero.normalized;
         }
 
         // 2) Separation: push away from nearby units
+        float sepMultiplier = (distToHero <= idleDistance) ? separationIdleScale : 1f;
         for (int i = 0; i < ActiveUnits.Count; i++)
         {
             ArmyUnit other = ActiveUnits[i];
@@ -108,7 +137,62 @@ public class ArmyUnit : MonoBehaviour
             }
 
             transform.position = newPos;
+           
+
         }
+
+        Vector3 delta = transform.position - lastPos;
+        lastPos = transform.position;
+
+        bool moved = delta.sqrMagnitude > minMoveDelta;
+
+        if(distToHero <= idleDistance && !moved)
+        {
+            UpdateAnimatorMoving(false);
+            return false;
+        }
+
+        if (moved)
+            UpdateAnimatorDirection(delta);
+
+        UpdateAnimatorMoving(moved);
+        return moved;
+            
+    }
+
+    private void UpdateAnimatorMoving(bool moving)
+    {
+        if (animator == null) return;
+        animator.SetBool(isMoving, moving);
+
+        // Keep lastFacing when idle — do NOT overwrite moveX/moveY when not moving
+        if (!moving)
+        {
+            animator.SetFloat(moveX, lastFacing.x);
+            animator.SetFloat(moveY, lastFacing.y);
+        }
+    }
+
+    private void UpdateAnimatorDirection(Vector3 moveDir)
+    {
+        if (animator == null) return;
+
+        Vector2 dir = new Vector2(moveDir.x, moveDir.y);
+
+        // force into Up/Down/Left/Right
+        if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
+        {
+            dir = new Vector2(Mathf.Sign(dir.x), 0f);
+        }
+        else
+        {
+            dir = new Vector2(0f, Mathf.Sign(dir.y));
+        }
+
+        lastFacing = dir;
+
+        animator.SetFloat(moveX, dir.x);
+        animator.SetFloat(moveY, dir.y);
     }
 
     private void HandleAutoAttack()
