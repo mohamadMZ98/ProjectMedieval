@@ -54,7 +54,7 @@ public class PauseManager : MonoBehaviour
 
     private void Update()
     {
-        Debug.Log("Pause update running");
+        //Debug.Log("Pause update running");
         // Example keybind: Escape toggles pause
         // Replace with your input system hook if you use the new Input System
         if (Input.GetKeyDown(KeyCode.Escape))
