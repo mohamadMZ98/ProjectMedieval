@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae25b7bcec46e4086a4ff23dae0e9fcc, type: 3}
   m_Name: EnemyData_Demon
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
-  id: Enemy
-  sprite: {fileID: 0}
+  id: EnemyData_Demon
+  sprite: {fileID: -3109225567217344451, guid: eae9295ee96744f3ebabaecfa485cffc, type: 3}
+  animatorController: {fileID: 0}
   maxHP: 10
   attackDamage: 5
   moveSpeed: 2

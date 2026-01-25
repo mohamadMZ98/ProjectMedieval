@@ -12,11 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae25b7bcec46e4086a4ff23dae0e9fcc, type: 3}
   m_Name: EnemyData_Dragon
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
-  id: Enemy
-  sprite: {fileID: 0}
-  maxHP: 10
-  attackDamage: 5
-  moveSpeed: 2
-  attackRange: 1.2
+  id: EnemyData_Dragon
+  sprite: {fileID: 7066767661700882461, guid: 7aec5724942c6411c900102d61eecfc6, type: 3}
+  animatorController: {fileID: 0}
+  maxHP: 35
+  attackDamage: 10
+  moveSpeed: 0.4
+  attackRange: 1
   attackInterval: 1
-  xpReward: 5
+  xpReward: 50

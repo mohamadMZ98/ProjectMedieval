@@ -8,6 +8,11 @@ public class Enemy : MonoBehaviour
     public static readonly List<Enemy> ActiveEnemies = new List<Enemy>();
 
     [Header("Config")]
+
+    private SpriteRenderer spriteRenderer;
+    private Animator animator;
+    private Vector3 lastPosition;
+
     [SerializeField] private EnemyData data;
 
     [Header("Runtime Stats (filled from data)")]
@@ -19,7 +24,6 @@ public class Enemy : MonoBehaviour
 
     private float currentHP;
     private float attackTimer = 0f;
-    private SpriteRenderer spriteRenderer;
 
     #region Static helpers
 
@@ -42,6 +46,8 @@ public class Enemy : MonoBehaviour
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
+        animator = GetComponent<Animator>();
+        lastPosition = transform.position;
     }
 
     private void OnEnable()
@@ -63,26 +69,30 @@ public class Enemy : MonoBehaviour
     public void SetData(EnemyData newData)
     {
         data = newData;
+        if (data == null) return;
 
-        if (data == null)
-        {
-            Debug.LogWarning($"Enemy {name}: SetData called with null data");
-            return;
-        }
-
-        maxHP         = data.maxHP;
-        attackDamage  = data.attackDamage;
-        moveSpeed     = data.moveSpeed;
-        attackRange   = data.attackRange;
+        // Stats
+        maxHP = data.maxHP;
+        attackDamage = data.attackDamage;
+        moveSpeed = data.moveSpeed;
+        attackRange = data.attackRange;
         attackInterval = data.attackInterval;
 
+        // Visuals
         if (spriteRenderer != null && data.sprite != null)
         {
             spriteRenderer.sprite = data.sprite;
         }
 
+        // Animation (optional per enemy type)
+        if (animator != null && data.animatorController != null)
+        {
+            animator.runtimeAnimatorController = data.animatorController;
+        }
+
         currentHP = maxHP;
     }
+
 
     private void Start()
     {
@@ -106,6 +116,15 @@ public class Enemy : MonoBehaviour
 
         MoveTowardsHero();
         HandleAttack();
+        // --- Animation state ---
+        bool isMoving = (transform.position - lastPosition).sqrMagnitude > 0.0001f;
+
+        if (animator != null)
+        {
+            animator.SetBool("IsMoving", isMoving);
+        }
+
+        lastPosition = transform.position;
     }
 
     private void MoveTowardsHero()

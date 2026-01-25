@@ -9,6 +9,9 @@ public class EnemyData : ScriptableObject
     [Header("Visuals")]
     public Sprite sprite;
 
+    [Header("Animation (optional)")]
+    public RuntimeAnimatorController animatorController;
+
     [Header("Stats")]
     public float maxHP = 10f;
     public float attackDamage = 5f;

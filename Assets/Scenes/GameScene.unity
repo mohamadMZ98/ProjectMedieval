@@ -2644,7 +2644,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a408f55f9eeef4c769340b6842e3463b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaveSpawner
-  enemyPrefab: {fileID: 9215837783332059432, guid: b3b67981b5b5f47988e2b907f76f6178, type: 3}
+  enemyPrefab: {fileID: 626587835728841134, guid: 7d61bf277c0984abf9bc3aa55bdd746f, type: 3}
+  enemyTypes:
+  - {fileID: 11400000, guid: 19f2ccfe6459e45f9b66ba1d106b7550, type: 2}
+  - {fileID: 11400000, guid: b9cc633853ea44e3ca8f3d80137cf127, type: 2}
+  - {fileID: 11400000, guid: f7e535c1381e640cf974a25b8184ff56, type: 2}
+  - {fileID: 11400000, guid: cdd07bce5c74e4337930d10b7176435d, type: 2}
+  - {fileID: 11400000, guid: cfda6e399d6ad4159b0d5fa54268bbac, type: 2}
   initialSpawnInterval: 0.4
   minSpawnInterval: 0.3
   spawnRadius: 5
