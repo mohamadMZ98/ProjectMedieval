@@ -2,11 +2,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Collider2D))]
+[RequireComponent(typeof(SpriteRenderer))]
 public class Enemy : MonoBehaviour
 {
     public static readonly List<Enemy> ActiveEnemies = new List<Enemy>();
 
+    [Header("Config")]
     [SerializeField] private EnemyData data;
+
+    [Header("Runtime Stats (filled from data)")]
     [SerializeField] private float maxHP = 10f;
     [SerializeField] private float attackDamage = 5f;
     [SerializeField] private float moveSpeed = 2f;
@@ -15,8 +19,32 @@ public class Enemy : MonoBehaviour
 
     private float currentHP;
     private float attackTimer = 0f;
+    private SpriteRenderer spriteRenderer;
 
-    void OnEnable()
+    #region Static helpers
+
+    public static void DestroyAllActiveEnemies()
+    {
+        for (int i = ActiveEnemies.Count - 1; i >= 0; i--)
+        {
+            Enemy e = ActiveEnemies[i];
+            if (e != null)
+            {
+                Object.Destroy(e.gameObject);
+            }
+        }
+
+        ActiveEnemies.Clear();
+    }
+
+    #endregion
+
+    private void Awake()
+    {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+    }
+
+    private void OnEnable()
     {
         if (!ActiveEnemies.Contains(this))
         {
@@ -24,41 +52,52 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    public static void DestroyAllActiveEnemies()
-{
-    // Destroy all currently alive enemies and clear the list
-    for (int i = ActiveEnemies.Count - 1; i >= 0; i--)
-    {
-        Enemy e = ActiveEnemies[i];
-        if (e != null)
-        {
-            Object.Destroy(e.gameObject);
-        }
-    }
-
-    ActiveEnemies.Clear();
-}
-
-
-    void OnDisable()
+    private void OnDisable()
     {
         ActiveEnemies.Remove(this);
     }
 
-    void Start()
+    /// <summary>
+    /// Called by WaveSpawner right after Instantiate to choose which enemy type this instance represents.
+    /// </summary>
+    public void SetData(EnemyData newData)
     {
-        if (data != null)
+        data = newData;
+
+        if (data == null)
         {
-            maxHP = data.maxHP;
-            attackDamage = data.attackDamage;
-            moveSpeed = data.moveSpeed;
-            attackInterval = data.attackInterval;
+            Debug.LogWarning($"Enemy {name}: SetData called with null data");
+            return;
+        }
+
+        maxHP         = data.maxHP;
+        attackDamage  = data.attackDamage;
+        moveSpeed     = data.moveSpeed;
+        attackRange   = data.attackRange;
+        attackInterval = data.attackInterval;
+
+        if (spriteRenderer != null && data.sprite != null)
+        {
+            spriteRenderer.sprite = data.sprite;
         }
 
         currentHP = maxHP;
     }
 
-    void Update()
+    private void Start()
+    {
+        // If no one called SetData yet but data is assigned in the inspector, use it.
+        if (data != null)
+        {
+            SetData(data);
+        }
+        else
+        {
+            currentHP = maxHP;
+        }
+    }
+
+    private void Update()
     {
         if (RunManager.Instance == null || !RunManager.Instance.IsRunning)
         {
@@ -69,7 +108,7 @@ public class Enemy : MonoBehaviour
         HandleAttack();
     }
 
-    void MoveTowardsHero()
+    private void MoveTowardsHero()
     {
         Transform hero = RunManager.Instance.HeroTransform;
         if (hero == null) return;
@@ -85,7 +124,7 @@ public class Enemy : MonoBehaviour
         transform.position = newPos;
     }
 
-    void HandleAttack()
+    private void HandleAttack()
     {
         Transform hero = RunManager.Instance.HeroTransform;
         if (hero == null) return;
@@ -114,9 +153,8 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    void Die()
+    private void Die()
     {
-        // Make sure this enemy is considered removed BEFORE logging
         ActiveEnemies.Remove(this);
 
         if (RunManager.Instance != null)
