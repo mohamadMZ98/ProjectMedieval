@@ -2,7 +2,11 @@ using UnityEngine;
 
 public class WaveSpawner : MonoBehaviour
 {
-    [SerializeField] private Enemy enemyPrefab;
+    [Header("Enemy Setup")]
+    [SerializeField] private Enemy enemyPrefab;      // base prefab (with Enemy + SpriteRenderer)
+    [SerializeField] private EnemyData[] enemyTypes; // different enemy types
+
+    [Header("Spawn Timing")]
     [SerializeField] private float initialSpawnInterval = 0.4f;
     [SerializeField] private float minSpawnInterval = 0.3f;
     [SerializeField] private float spawnRadius = 5f;
@@ -14,7 +18,7 @@ public class WaveSpawner : MonoBehaviour
     private float spawnTimer = 0f;
     private int totalSpawned = 0;
 
-    void Update()
+    private void Update()
     {
         if (RunManager.Instance == null || !RunManager.Instance.IsRunning)
             return;
@@ -31,7 +35,7 @@ public class WaveSpawner : MonoBehaviour
         }
     }
 
-    void TrySpawnEnemy(float currentInterval)
+    private void TrySpawnEnemy(float currentInterval)
     {
         if (enemyPrefab == null)
         {
@@ -39,7 +43,13 @@ public class WaveSpawner : MonoBehaviour
             return;
         }
 
-        // Cap concurrent enemies, but no noisy log
+        if (enemyTypes == null || enemyTypes.Length == 0)
+        {
+            Debug.LogError("WaveSpawner: enemyTypes array is empty. Assign EnemyData assets.");
+            return;
+        }
+
+        // Cap concurrent enemies
         if (Enemy.ActiveEnemies.Count >= maxEnemies)
         {
             return;
@@ -56,12 +66,17 @@ public class WaveSpawner : MonoBehaviour
         Vector3 spawnPos = hero.position + new Vector3(randomDir.x, randomDir.y, 0f) * spawnRadius;
 
         Enemy spawned = Object.Instantiate(enemyPrefab, spawnPos, Quaternion.identity);
+
+        // Pick a random enemy type and apply its data & sprite
+        EnemyData chosen = enemyTypes[Random.Range(0, enemyTypes.Length)];
+        spawned.SetData(chosen);
+
         totalSpawned++;
 
         if (enableDebugLogs)
         {
             Debug.Log(
-                $"WaveSpawner: Spawned enemy #{totalSpawned} at {spawnPos}. " +
+                $"WaveSpawner: Spawned enemy #{totalSpawned} ({chosen.id}) at {spawnPos}. " +
                 $"Active = {Enemy.ActiveEnemies.Count}, Max = {maxEnemies}, Interval = {currentInterval:F2}"
             );
         }
