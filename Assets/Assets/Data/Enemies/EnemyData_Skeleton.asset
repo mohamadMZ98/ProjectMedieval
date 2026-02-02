@@ -13,9 +13,11 @@ MonoBehaviour:
   m_Name: EnemyData_Skeleton
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   id: EnemyData_Skeleton
-  displayName: Skeleton
+  sprite: {fileID: 3845719614425495551, guid: d0eddd60dd7874c4faf01b96cab71c7e, type: 3}
+  animatorOverride: {fileID: 22100000, guid: 7494c9fdcc2ead440ace79e68cbb46c2, type: 2}
   maxHP: 10
   attackDamage: 5
-  moveSpeed: 2
+  moveSpeed: 1
+  attackRange: 1.2
   attackInterval: 1
   xpReward: 10

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem.Controls;
 
 [RequireComponent(typeof(Collider2D))]
 [RequireComponent(typeof(SpriteRenderer))]
@@ -8,6 +9,13 @@ public class Enemy : MonoBehaviour
     public static readonly List<Enemy> ActiveEnemies = new List<Enemy>();
 
     [Header("Config")]
+
+    private SpriteRenderer spriteRenderer;
+    private Animator animator;
+    private Vector3 lastPosition;
+    private Vector2 lastMoveDir = Vector2.left;
+    private Vector2 lastFacing = Vector2.down;
+
     [SerializeField] private EnemyData data;
 
     [Header("Runtime Stats (filled from data)")]
@@ -17,9 +25,20 @@ public class Enemy : MonoBehaviour
     [SerializeField] private float attackRange = 1.2f;
     [SerializeField] private float attackInterval = 1.0f;
 
+    [Header("Animator Parameters")]
+    [SerializeField] private string isMovingParam = "isMoving";
+    [SerializeField] private string moveXParam = "moveX";
+    [SerializeField] private string moveYParam = "moveY";
+    [SerializeField] private string attackTrigger = "Attack";
+    [SerializeField] private string hitTrigger = "Hit";
+    [SerializeField] private string dieTrigger = "Die";
+
+    [SerializeField] private float stopMoveBuffer = 0.05f;
+
+    private bool wantsToMove;
     private float currentHP;
     private float attackTimer = 0f;
-    private SpriteRenderer spriteRenderer;
+    private bool isDead;
 
     #region Static helpers
 
@@ -42,6 +61,8 @@ public class Enemy : MonoBehaviour
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
+        if (animator == null) animator = GetComponentInChildren<Animator>(true);
+        lastPosition = transform.position;
     }
 
     private void OnEnable()
@@ -63,29 +84,35 @@ public class Enemy : MonoBehaviour
     public void SetData(EnemyData newData)
     {
         data = newData;
+        if (data == null) return;
 
-        if (data == null)
-        {
-            Debug.LogWarning($"Enemy {name}: SetData called with null data");
-            return;
-        }
-
-        maxHP         = data.maxHP;
-        attackDamage  = data.attackDamage;
-        moveSpeed     = data.moveSpeed;
-        attackRange   = data.attackRange;
+        // Stats
+        maxHP = data.maxHP;
+        attackDamage = data.attackDamage;
+        moveSpeed = data.moveSpeed;
+        attackRange = data.attackRange;
         attackInterval = data.attackInterval;
 
+        // Visuals
         if (spriteRenderer != null && data.sprite != null)
         {
             spriteRenderer.sprite = data.sprite;
         }
 
+        // Animation (optional per enemy type)
+        if (animator && data.animatorOverride)
+        {
+            animator.runtimeAnimatorController = data.animatorOverride;
+        }
+
         currentHP = maxHP;
     }
 
+
     private void Start()
     {
+        Debug.Log($"Enemy animator obj: {animator.gameObject.name}, controller: {animator.runtimeAnimatorController.name}", this);
+
         // If no one called SetData yet but data is assigned in the inspector, use it.
         if (data != null)
         {
@@ -99,6 +126,7 @@ public class Enemy : MonoBehaviour
 
     private void Update()
     {
+        if (isDead) return;
         if (RunManager.Instance == null || !RunManager.Instance.IsRunning)
         {
             return;
@@ -106,6 +134,35 @@ public class Enemy : MonoBehaviour
 
         MoveTowardsHero();
         HandleAttack();
+
+        
+
+        Vector3 delta3 = transform.position - lastPosition;
+        Vector2 delta = new Vector2(delta3.x, delta3.y);
+
+        bool isMoving = delta.sqrMagnitude > 0.0001f;
+
+        if (animator != null)
+        {
+            animator.SetBool(isMovingParam, wantsToMove);
+
+            if (isMoving)
+            {
+                // Force to 4 directions (optional, but matches your 4-dir clips)
+                Vector2 dir = delta.normalized;
+
+                if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
+                    lastFacing = new Vector2(Mathf.Sign(dir.x), 0f);  // left/right
+                else
+                    lastFacing = new Vector2(0f, Mathf.Sign(dir.y));  // up/down
+            }
+
+            animator.SetFloat(moveXParam, lastFacing.x);
+            animator.SetFloat(moveYParam, lastFacing.y);
+        }
+
+
+        lastPosition = transform.position;
     }
 
     private void MoveTowardsHero()
@@ -113,15 +170,23 @@ public class Enemy : MonoBehaviour
         Transform hero = RunManager.Instance.HeroTransform;
         if (hero == null) return;
 
-        Vector3 direction = (hero.position - transform.position).normalized;
-        Vector3 newPos = transform.position + direction * moveSpeed * Time.deltaTime;
-
-        if (MapBounds.Instance != null)
+        float dist = Vector3.Distance(transform.position, hero.position);
+        if (!wantsToMove)
+            wantsToMove = dist > attackRange + stopMoveBuffer;
+        else
+            wantsToMove = dist > attackRange - stopMoveBuffer;
+        if (dist <= attackRange) return;
+        if (wantsToMove)
         {
-            newPos = MapBounds.Instance.ClampPosition(newPos);
-        }
+            Vector3 direction = (hero.position - transform.position).normalized;
+            Vector3 newPos = transform.position + direction * moveSpeed * Time.deltaTime;
 
+            if (MapBounds.Instance != null)
+            {
+                newPos = MapBounds.Instance.ClampPosition(newPos);
+            }
         transform.position = newPos;
+        }
     }
 
     private void HandleAttack()
@@ -136,6 +201,9 @@ public class Enemy : MonoBehaviour
         if (attackTimer >= attackInterval)
         {
             attackTimer = 0f;
+            if (animator)
+                animator.SetTrigger(attackTrigger);
+
             PlayerController heroController = hero.GetComponent<PlayerController>();
             if (heroController != null)
             {
@@ -146,7 +214,15 @@ public class Enemy : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
+        if (isDead)
+            return;
+
         currentHP -= damage;
+
+        if (animator)
+            animator.SetTrigger(hitTrigger);
+            
+        
         if (currentHP <= 0f)
         {
             Die();
@@ -156,6 +232,9 @@ public class Enemy : MonoBehaviour
     private void Die()
     {
         ActiveEnemies.Remove(this);
+
+        if(animator)
+            animator.SetTrigger(dieTrigger);
 
         if (RunManager.Instance != null)
         {

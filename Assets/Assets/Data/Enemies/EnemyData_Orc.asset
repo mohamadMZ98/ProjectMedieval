@@ -12,11 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae25b7bcec46e4086a4ff23dae0e9fcc, type: 3}
   m_Name: EnemyData_Orc
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
-  id: Enemy
-  sprite: {fileID: 0}
-  maxHP: 10
-  attackDamage: 5
-  moveSpeed: 2
-  attackRange: 1.2
+  id: EnemyData_Orc
+  sprite: {fileID: 3799508404887519019, guid: fee97472930864370b86c2bfd0ade603, type: 3}
+  animatorOverride: {fileID: 22100000, guid: c3124338c0377614eb34e9840ba71f2b, type: 2}
+  maxHP: 20
+  attackDamage: 6
+  moveSpeed: 0.7
+  attackRange: 1
   attackInterval: 1
-  xpReward: 5
+  xpReward: 20

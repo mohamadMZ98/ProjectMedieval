@@ -13,9 +13,11 @@ MonoBehaviour:
   m_Name: EnemyData_Slime
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   id: EnemyData_Slime
-  displayName: Slime
-  maxHP: 10
-  attackDamage: 5
+  sprite: {fileID: 5768707682448730334, guid: 6bb42a6635a9047ccbbaf520b449e9f1, type: 3}
+  animatorOverride: {fileID: 22100000, guid: 2b0c5db60503b364baf776f6d991cf00, type: 2}
+  maxHP: 5
+  attackDamage: 2
   moveSpeed: 2
+  attackRange: 1.2
   attackInterval: 1
-  xpReward: 10
+  xpReward: 5
