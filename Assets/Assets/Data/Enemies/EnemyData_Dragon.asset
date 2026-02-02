@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   id: EnemyData_Dragon
   sprite: {fileID: 7066767661700882461, guid: 7aec5724942c6411c900102d61eecfc6, type: 3}
-  animatorController: {fileID: 0}
+  animatorOverride: {fileID: 22100000, guid: 0bb46c4e986fce04fa13d39552ffa87f, type: 2}
   maxHP: 35
   attackDamage: 10
   moveSpeed: 0.4

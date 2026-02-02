@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   id: EnemyData_Demon
   sprite: {fileID: -3109225567217344451, guid: eae9295ee96744f3ebabaecfa485cffc, type: 3}
-  animatorController: {fileID: 0}
+  animatorOverride: {fileID: 22100000, guid: 7c4dc88aff4949f40a1acd50d7efe663, type: 2}
   maxHP: 10
   attackDamage: 5
   moveSpeed: 2

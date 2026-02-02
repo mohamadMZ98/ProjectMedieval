@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   id: EnemyData_Orc
   sprite: {fileID: 3799508404887519019, guid: fee97472930864370b86c2bfd0ade603, type: 3}
-  animatorController: {fileID: 0}
+  animatorOverride: {fileID: 22100000, guid: c3124338c0377614eb34e9840ba71f2b, type: 2}
   maxHP: 20
   attackDamage: 6
   moveSpeed: 0.7

@@ -10,7 +10,7 @@ public class EnemyData : ScriptableObject
     public Sprite sprite;
 
     [Header("Animation (optional)")]
-    public RuntimeAnimatorController animatorController;
+    public AnimatorOverrideController animatorOverride;
 
     [Header("Stats")]
     public float maxHP = 10f;
